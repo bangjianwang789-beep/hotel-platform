@@ -3,7 +3,21 @@ import axios from 'axios'
 const BASE = '/api'
 const api = axios.create({ baseURL: BASE, timeout: 15000 })
 
-api.interceptors.response.use(r => r.data, err => Promise.reject(err))
+// 请求拦截器：附加JWT Token
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('hotel_token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+api.interceptors.response.use(r => r.data, err => {
+  if (err.response?.status === 401) {
+    localStorage.removeItem('hotel_token')
+    localStorage.removeItem('hotel_user')
+    window.location.href = '/login'
+  }
+  return Promise.reject(err)
+})
 
 export default {
   // 品牌
@@ -27,4 +41,9 @@ export default {
   createInvestor(data) { return api.post('/investors', data) },
   updateInvestor(id, data) { return api.put(`/investors/${id}`, data) },
   deleteInvestor(id) { return api.delete(`/investors/${id}`) },
+
+  // 认证
+  login(data) { return api.post('/auth/login', data) },
+  register(data) { return api.post('/auth/register', data) },
+  getMe() { return api.get('/auth/me') },
 }

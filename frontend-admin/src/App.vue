@@ -15,7 +15,10 @@
     <el-container>
       <el-header style="background:#fff; border-bottom: 1px solid #eee; display:flex; align-items:center; justify-content:space-between">
         <span style="font-size:16px; font-weight:600">{{ $route.meta.title }}</span>
-        <span style="color:#999; font-size:12px">{{ new Date().toLocaleString('zh-CN') }}</span>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="color:#666; font-size:13px">{{ currentUser }}</span>
+          <el-button size="small" @click="handleLogout">退出</el-button>
+        </div>
       </el-header>
       <el-main style="background:#f5f7fa">
         <router-view />
@@ -25,5 +28,22 @@
 </template>
 
 <script setup>
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { Odometer, Shop, DataAnalysis, User, Document } from '@element-plus/icons-vue'
+
+const router = useRouter()
+
+const currentUser = computed(() => {
+  try {
+    const user = JSON.parse(localStorage.getItem('hotel_user') || '{}')
+    return user.username || '未登录'
+  } catch { return '未登录' }
+})
+
+function handleLogout() {
+  localStorage.removeItem('hotel_token')
+  localStorage.removeItem('hotel_user')
+  router.push('/login')
+}
 </script>

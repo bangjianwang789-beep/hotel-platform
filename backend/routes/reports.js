@@ -2,6 +2,7 @@ import express from 'express';
 import { insertRecord, findRecords } from '../services/DataStore.js';
 import evaluationEngine from '../services/EvaluationEngine.js';
 import { generateReportPdf } from '../services/PdfReportService.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -19,8 +20,8 @@ router.get('/', (req, res) => {
   }
 });
 
-// POST /api/reports/generate - 生成评估报告（持久化）
-router.post('/generate', (req, res) => {
+// POST /api/reports/generate - 生成评估报告（需登录）
+router.post('/generate', requireAuth, (req, res) => {
   try {
     const { property, investor_id, report_type = 'comprehensive' } = req.body;
     if (!property) return res.status(400).json({ error: 'property required' });

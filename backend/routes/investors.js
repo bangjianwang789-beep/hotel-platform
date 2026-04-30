@@ -1,5 +1,6 @@
 import express from 'express';
 import { insertRecord, findRecords, updateRecord, deleteRecord } from '../services/DataStore.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -18,8 +19,8 @@ router.get('/', (req, res) => {
   }
 });
 
-// POST /api/investors - 新建
-router.post('/', (req, res) => {
+// POST /api/investors - 新建（需登录）
+router.post('/', requireAuth, (req, res) => {
   try {
     const { name, phone, city, city_tier, budget, area_sqm, property_address, status = 'new', notes } = req.body;
     if (!name || !phone) return res.status(400).json({ success: false, error: 'name和phone必填' });
