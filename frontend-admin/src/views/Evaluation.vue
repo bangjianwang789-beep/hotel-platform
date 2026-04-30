@@ -98,7 +98,7 @@
           <el-card v-if="result.financials" style="margin-bottom:16px">
             <template #header><span>投资回报测算</span></template>
             <el-descriptions :column="2" border size="small">
-              <el-descriptions-item label="预估房价">{{ result.financials.estimated_room_rate }}元/晚</el-descriptions-item>
+              <el-descriptions-item label="预估房价">{{ result.financials.estimated_adr_yuan }}元/晚</el-descriptions-item>
               <el-descriptions-item label="年营收">{{ (result.financials.annual_revenue_yuan/10000).toFixed(0) }}万元</el-descriptions-item>
               <el-descriptions-item label="年GOP">{{ (result.financials.annual_gop_yuan/10000).toFixed(0) }}万元</el-descriptions-item>
               <el-descriptions-item label="年净利润">{{ (result.financials.annual_net_profit_yuan/10000).toFixed(0) }}万元</el-descriptions-item>
