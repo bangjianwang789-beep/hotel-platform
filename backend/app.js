@@ -7,6 +7,7 @@ import evaluationRouter from './routes/evaluation.js';
 import reportsRouter from './routes/reports.js';
 import investorsRouter from './routes/investors.js';
 import authRouter from './routes/auth.js';
+import shareRouter from './routes/share.js';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api', evaluationRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/investors', investorsRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/share', shareRouter);
 
 // Health check
 app.get('/health', (req, res) => {

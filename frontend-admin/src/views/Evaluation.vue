@@ -118,11 +118,27 @@
           <!-- 保存报告 -->
           <div style="margin-top:16px; text-align:center">
             <el-button type="success" size="large" @click="saveReport">保存此报告</el-button>
+            <el-button v-if="savedReportId" type="primary" size="large" @click="handleShare">分享报告</el-button>
           </div>
         </div>
         <el-empty v-else description="填写左侧表单，点击「开始评估」查看结果" />
       </el-col>
     </el-row>
+
+    <!-- 分享对话框 -->
+    <el-dialog v-model="shareDialogVisible" title="分享报告" width="500px">
+      <el-alert type="info" :closable="false" style="margin-bottom:16px">
+        分享链接有效期30天，无需登录即可查看完整报告内容。
+      </el-alert>
+      <el-input v-model="shareUrl" readonly style="margin-bottom:12px">
+        <template #append>
+          <el-button @click="copyShareUrl">复制链接</el-button>
+        </template>
+      </el-input>
+      <div style="color:#999;font-size:12px">
+        分享链接仅供投资人查看，不可用于商业转载。如需关闭访问，请联系管理员。
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -141,12 +157,16 @@ const form = ref({
 
 const result = ref(null)
 const loading = ref(false)
+const savedReportId = ref(null)
+const shareDialogVisible = ref(false)
+const shareUrl = ref('')
 
 async function handleEvaluate() {
   loading.value = true
   try {
     const r = await api.evaluate(form.value)
     result.value = r.data || r
+    savedReportId.value = null
   } catch (err) {
     ElMessage.error('评估失败：' + err.message)
   } finally {
@@ -157,15 +177,38 @@ async function handleEvaluate() {
 async function saveReport() {
   if (!result.value) return
   try {
-    await api.generateReport({ property: form.value, report_type: 'comprehensive' })
+    const r = await api.generateReport({ property: form.value, report_type: 'comprehensive' })
+    savedReportId.value = r.data?.id || null
     ElMessage.success('报告已保存')
   } catch (err) {
     ElMessage.error('保存失败')
   }
 }
 
+async function handleShare() {
+  if (!savedReportId.value) {
+    ElMessage.warning('请先保存报告')
+    return
+  }
+  try {
+    const r = await api.createShareLink(savedReportId.value, 30)
+    if (r.success && r.data) {
+      const fullUrl = window.location.origin + '/share/' + r.data.shareToken
+      shareUrl.value = fullUrl
+      shareDialogVisible.value = true
+    }
+  } catch (err) {
+    ElMessage.error('生成分享链接失败')
+  }
+}
+
+function copyShareUrl() {
+  navigator.clipboard.writeText(shareUrl.value).then(() => {
+    ElMessage.success('链接已复制到剪贴板')
+  })
+}
+
 onMounted(() => {
-  // 从 URL 参数带入客户信息
   const p = new URLSearchParams(window.location.search)
   if (p.get('city')) form.value.city = p.get('city')
   if (p.get('city_tier')) form.value.city_tier = p.get('city_tier')

@@ -46,4 +46,8 @@ export default {
   login(data) { return api.post('/auth/login', data) },
   register(data) { return api.post('/auth/register', data) },
   getMe() { return api.get('/auth/me') },
+
+  // 分享
+  createShareLink(reportId, expiresDays) { return api.post(`/reports/${reportId}/share`, { expiresDays }) },
+  getSharedReport(token) { return api.get(`/share/${token}`) },
 }

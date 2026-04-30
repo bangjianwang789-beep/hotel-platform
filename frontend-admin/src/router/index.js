@@ -10,6 +10,7 @@ const router = createRouter({
     { path: '/evaluate', component: () => import('../views/Evaluation.vue'), meta: { title: '物业评估', requiresAuth: true } },
     { path: '/investors', component: () => import('../views/InvestorList.vue'), meta: { title: '意向客户', requiresAuth: true } },
     { path: '/reports', component: () => import('../views/ReportList.vue'), meta: { title: '评估报告', requiresAuth: true } },
+    { path: '/share/:token', component: () => import('../views/ShareReport.vue'), meta: { title: '评估报告', requiresAuth: false } },
   ]
 })
 

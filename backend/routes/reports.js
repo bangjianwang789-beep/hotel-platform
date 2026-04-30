@@ -3,10 +3,11 @@ import { insertRecord, findRecords } from '../services/DataStore.js';
 import evaluationEngine from '../services/EvaluationEngine.js';
 import { generateReportPdf } from '../services/PdfReportService.js';
 import { requireAuth } from '../middleware/auth.js';
+import { createShareLink, validateShareToken } from '../services/ShareService.js';
 
 const router = express.Router();
 
-// GET /api/reports - 历史报告列表
+// GET /api/reports - 历史报告列表（放在最前避免 /:id 拦截）
 router.get('/', (req, res) => {
   try {
     const { investor_id, page = 1, limit = 20 } = req.query;
@@ -100,4 +101,38 @@ router.get('/:id/pdf', async (req, res) => {
   }
 });
 
+// POST /api/reports/:id/share - 生成分享链接（需登录）
+router.post('/:id/share', requireAuth, (req, res) => {
+  try {
+    const list = findRecords('reports', r => r.id === req.params.id);
+    if (!list.length) return res.status(404).json({ success: false, error: '报告未找到' });
+
+    const report = list[0];
+    const { expiresDays } = req.body;
+
+    const share = createShareLink(report, { expiresDays: expiresDays || 30 });
+
+    // 附加到报告记录
+    report.shareToken = share.shareToken;
+    report.shareExpiresAt = share.expiresAt;
+
+    // 重新保存（更新现有记录）
+    const { updateRecord } = require('../services/DataStore.js');
+    updateRecord('reports', report.id, { shareToken: share.shareToken, shareExpiresAt: share.expiresAt });
+
+    res.json({
+      success: true,
+      data: {
+        shareToken: share.shareToken,
+        shareUrl: share.shareUrl,
+        expiresAt: share.expiresAt,
+      }
+    });
+  } catch (err) {
+    console.error('[Share]', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 export default router;
+
