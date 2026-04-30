@@ -25,7 +25,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ─── 品牌数据库 ─────────────────────────────────────────
-const BRAND_DATA_PATH = path.resolve(__dirname, '../../../brand-data/all_brands.json');
+const BRAND_DATA_PATH = path.resolve(__dirname, '../../brand-data/all_brands.json');
 
 // ─── 城市等级评分 ─────────────────────────────────────────
 // 城市等级系数：反映城市整体消费力和商务流量
@@ -222,7 +222,7 @@ class EvaluationEngine {
     // ── 风险信号 ──
     const riskSignals = this._detectRisks(d, {
       dimRent, dimCompetition, dimReno, dimArea, dimOpCost
-    }, brandMatches.topMatches[0], overallScore);
+    }, brandMatches.topMatches[0], overallScore, financials);
 
     return {
       overallScore,
@@ -401,7 +401,7 @@ class EvaluationEngine {
   }
 
   // ─── 风险信号 ─────────────────────────────────────────
-  _detectRisks(d, scores, topBrand, overallScore) {
+  _detectRisks(d, scores, topBrand, overallScore, fin) {
     const risks = [];
 
     if (scores.dimRent > 0 && scores.dimRent < 40) {
@@ -430,6 +430,16 @@ class EvaluationEngine {
 
     if (scores.dimOpCost < 50) {
       risks.push({ level: 'MEDIUM', signal: `运营成本偏高（${d.operating_cost_per_room_day}元/间/天），需加强成本管控` });
+    }
+
+    // ── 租金覆盖率风险（租金/年营收 > 35%即为高风险）─
+    if (fin && fin.annual_revenue_yuan > 0) {
+      const rentRatio = fin.annual_rent_yuan / fin.annual_revenue_yuan;
+      if (rentRatio > 0.45) {
+        risks.push({ level: 'HIGH', signal: `租金压力极大（年租金${(fin.annual_rent_yuan/10000).toFixed(0)}万，占年营收${(rentRatio*100).toFixed(0)}%），严重挤压利润空间` });
+      } else if (rentRatio > 0.35) {
+        risks.push({ level: 'MEDIUM', signal: `租金负担较重（年租金${(fin.annual_rent_yuan/10000).toFixed(0)}万，占年营收${(rentRatio*100).toFixed(0)}%）` });
+      }
     }
 
     if (overallScore < 55) {
