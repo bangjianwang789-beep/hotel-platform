@@ -1,6 +1,7 @@
 import express from 'express';
 import { insertRecord, findRecords } from '../services/DataStore.js';
 import evaluationEngine from '../services/EvaluationEngine.js';
+import { generateReportPdf } from '../services/PdfReportService.js';
 
 const router = express.Router();
 
@@ -76,6 +77,24 @@ router.get('/:id', (req, res) => {
     if (!list.length) return res.status(404).json({ success: false, error: '报告未找到' });
     res.json({ success: true, data: list[0] });
   } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/reports/:id/pdf - 下载PDF版本
+router.get('/:id/pdf', async (req, res) => {
+  try {
+    const list = findRecords('reports', r => r.id === req.params.id);
+    if (!list.length) return res.status(404).json({ success: false, error: '报告未找到' });
+
+    const report = list[0];
+    const filePath = await generateReportPdf(report);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${report.property?.name || 'report'}_评估报告.pdf"`);
+    res.sendFile(filePath);
+  } catch (err) {
+    console.error('[ReportPDF]', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });

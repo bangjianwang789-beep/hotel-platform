@@ -33,9 +33,10 @@
         <el-table-column prop="generatedAt" label="评估时间" width="160">
           <template #default="{ row }">{{ new Date(row.generatedAt).toLocaleString('zh-CN') }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="100">
+        <el-table-column label="操作" width="150">
           <template #default="{ row }">
             <el-button size="small" @click="viewDetail(row)">查看</el-button>
+            <el-button size="small" type="primary" @click="downloadPdf(row)">下载PDF</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -91,6 +92,10 @@ function loadReports() {
 }
 
 function viewDetail(row) { detail.value = row; detailVisible.value = true }
+
+function downloadPdf(row) {
+  window.open(`/api/reports/${row.id}/pdf`, '_blank')
+}
 
 onMounted(loadReports)
 </script>
